@@ -24,25 +24,21 @@ func main(){
 
 	if (*to == 0){
 		fmt.Println("flag --to is requested")
-		return
 		os.Exit(1)
 	}
 
 	if (*from > *to){
 		fmt.Println("flag --from can't be bigger than flag --to")
-		return
 		os.Exit(1)
 	}
 
 	if (*workers <= 0){
 		fmt.Println("flag --workers can't be <= 0")
-		return
 		os.Exit(1)
 	}
 
 	if (*timeout < 0){
 		fmt.Println("flag --timeout can't be < 0")
-		return
 		os.Exit(1)
 	}
 
@@ -56,12 +52,23 @@ func main(){
 		body, err := fetchFilm(i)
 
 		if err != nil{
-			return
+			fmt.Println("movie error", err)
+			continue
 		}
 
 		movie, err := parseJson(body)
 
-		fmt.Println(movie)
+		if err != nil{
+			fmt.Println("parsing error", err)
+			continue
+		}
+
+		fmt.Printf("%d — %s — %d — %s\n",
+			movie.ID,
+			movie.Title,
+			movie.Year,
+			movie.Director,
+		)
 
 		fmt.Print(string(body))
 

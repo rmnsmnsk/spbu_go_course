@@ -7,8 +7,6 @@ import(
 
 )
 
-
-
 func fetchFilm(i int)([]byte, error){
 
 	url := fmt.Sprintf("https://homeworksite.site/%d/info.0.json", i)
@@ -22,10 +20,13 @@ func fetchFilm(i int)([]byte, error){
 
 	defer resp.Body.Close()
 
+	if (resp.StatusCode < 200 || resp.StatusCode > 299){
+		return nil, fmt.Errorf("movie %d: HTTP status %d", i, resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil{
-		fmt.Println("reading error", err)
 		return nil, err
 	}
 
