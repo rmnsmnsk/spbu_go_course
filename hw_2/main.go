@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	//"io"
 	"flag"
-	"time"
 	"os"
+	"os/signal"
+	"time"
 )
 
 func main(){
@@ -23,7 +25,7 @@ func main(){
 	}
 
 	if (*to == 0){
-		fmt.Println("flag --to is requested")
+		fmt.Println("flag --to is required")
 		os.Exit(1)
 	}
 
@@ -37,7 +39,7 @@ func main(){
 		os.Exit(1)
 	}
 
-	if (*timeout < 0){
+	if (*timeout <= 0){
 		fmt.Println("flag --timeout can't be < 0")
 		os.Exit(1)
 	}
@@ -47,11 +49,27 @@ func main(){
 	fmt.Println("workers:", *workers)
 	fmt.Println("timeout:", *timeout)*/
 
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+	)
+	defer stop()
+
 	for i := *from; i <= *to; i++{
 
-		body, err := fetchFilm(i)
+		if ctx.Err() != nil{
+			fmt.Println("operation interrupted")
+			break
+		}
 
-		if err != nil{
+		body, err := fetchFilm(ctx, i, *timeout)
+
+		if err != nil {
+			if ctx.Err() != nil {
+				fmt.Println("operation interrupted")
+				break
+			}
+
 			fmt.Println("movie error", err)
 			continue
 		}
@@ -69,8 +87,6 @@ func main(){
 			movie.Year,
 			movie.Director,
 		)
-
-		fmt.Print(string(body))
 
 	}
 

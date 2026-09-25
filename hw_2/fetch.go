@@ -1,20 +1,35 @@
 package main
 
-import(
-	"net/http"
-	"io"
+import (
+	"context"
 	"fmt"
-
+	"io"
+	"net/http"
+	"time"
 )
 
-func fetchFilm(i int)([]byte, error){
+func fetchFilm(ctx context.Context, i int, timeout time.Duration)([]byte, error){
+
+	requestCtx, cancel := context.WithTimeout(ctx, timeout)
+
+	defer cancel()
 
 	url := fmt.Sprintf("https://homeworksite.site/%d/info.0.json", i)
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(
+		requestCtx,
+		http.MethodGet,
+		url,
+		nil,
+	)
 
 	if err != nil{
-		fmt.Println("request error:", err)
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil{
 		return nil, err
 	}
 
