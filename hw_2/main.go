@@ -46,14 +46,9 @@ func main() {
 	}
 
 	if *timeout <= 0 {
-		fmt.Println("flag --timeout can't be < 0")
+		fmt.Println("flag --timeout must be greater than 0")
 		os.Exit(1)
 	}
-
-	/*fmt.Println("from:", *from)
-	fmt.Println("to:", *to)
-	fmt.Println("workers:", *workers)
-	fmt.Println("timeout:", *timeout)*/
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
