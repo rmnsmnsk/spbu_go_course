@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: Movie Service API
+  version: 1.0.0
+  description: HTTP API for loading movies from the external movie stand.
+servers:
+  - url: /
+paths:
+  /load-movies:
+    get:
+      summary: Load a range of movies
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: All requested movies were loaded
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+        "207":
+          description: Some movies were not loaded; errors contains details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoadMoviesResponse"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /last-movie:
+    get:
+      summary: Find the last available movie
+      responses:
+        "200":
+          description: Last available movie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Movie"
+        "404":
+          description: The stand contains no movies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Movie stand failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "504":
+          description: Movie stand timeout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    Movie:
+      type: object
+      required: [id, title, year, director]
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        year:
+          type: integer
+          format: int32
+        director:
+          type: string
+    MovieError:
+      type: object
+      required: [id, message]
+      properties:
+        id:
+          type: integer
+          format: int64
+        message:
+          type: string
+    LoadMoviesResponse:
+      type: object
+      required: [movies, errors]
+      properties:
+        movies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Movie"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieError"
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
