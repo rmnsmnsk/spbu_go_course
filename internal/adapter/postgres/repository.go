@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"movie-service/internal/domain"
 )
@@ -68,6 +69,43 @@ func (r *Repository) GetAllMovies(ctx context.Context) ([]domain.Movie, error) {
 	defer rows.Close()
 
 	movies := make([]domain.Movie, 0)
+	for rows.Next() {
+		var movie domain.Movie
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Year, &movie.Director); err != nil {
+			return nil, fmt.Errorf("scan movie: %w", err)
+		}
+		movies = append(movies, movie)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read movies: %w", err)
+	}
+	return movies, nil
+}
+
+func (r *Repository) GetMoviesByIDs(ctx context.Context, ids []int64) ([]domain.Movie, error) {
+	if len(ids) == 0 {
+		return []domain.Movie{}, nil
+	}
+
+	placeholders := make([]string, 0, len(ids))
+	args := make([]any, 0, len(ids))
+	for position, id := range ids {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", position+1))
+		args = append(args, id)
+	}
+	query := `
+		SELECT id, title, year, director
+		FROM movies
+		WHERE id IN (` + strings.Join(placeholders, ", ") + `)
+		ORDER BY id`
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("get movies by IDs: %w", err)
+	}
+	defer rows.Close()
+
+	movies := make([]domain.Movie, 0, len(ids))
 	for rows.Next() {
 		var movie domain.Movie
 		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Year, &movie.Director); err != nil {

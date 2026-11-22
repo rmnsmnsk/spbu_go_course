@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	goredis "github.com/redis/go-redis/v9"
 )
@@ -50,4 +51,29 @@ func (i *Index) Replace(ctx context.Context, entries map[string][]int64) error {
 		return fmt.Errorf("write movie index: %w", err)
 	}
 	return nil
+}
+
+func (i *Index) FindAny(ctx context.Context, words []string) ([]int64, error) {
+	if len(words) == 0 {
+		return []int64{}, nil
+	}
+
+	keys := make([]string, 0, len(words))
+	for _, word := range words {
+		keys = append(keys, indexKeyPrefix+word)
+	}
+	members, err := i.client.SUnion(ctx, keys...).Result()
+	if err != nil {
+		return nil, fmt.Errorf("find movie IDs: %w", err)
+	}
+
+	ids := make([]int64, 0, len(members))
+	for _, member := range members {
+		id, err := strconv.ParseInt(member, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse movie ID %q: %w", member, err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }

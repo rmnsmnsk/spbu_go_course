@@ -86,7 +86,7 @@ func run(ctx context.Context) error {
 	}
 	log.Print("movie search index completed")
 
-	movieService := usecase.New(repository)
+	movieService := usecase.New(repository, index)
 
 	grpcListener, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

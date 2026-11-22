@@ -9,20 +9,27 @@ import (
 
 type MovieRepository interface {
 	GetMoviesRange(ctx context.Context, from, to int64) (domain.LoadResult, error)
+	GetMoviesByIDs(ctx context.Context, ids []int64) ([]domain.Movie, error)
 	GetLastMovie(ctx context.Context) (domain.Movie, error)
+}
+
+type SearchIndex interface {
+	FindAny(ctx context.Context, words []string) ([]int64, error)
 }
 
 type MovieUseCase interface {
 	LoadMovies(ctx context.Context, from, to int64) (domain.LoadResult, error)
 	GetLastMovie(ctx context.Context) (domain.Movie, error)
+	SearchMovies(ctx context.Context, query string) ([]domain.Movie, error)
 }
 
 type Service struct {
 	repository MovieRepository
+	index      SearchIndex
 }
 
-func New(repository MovieRepository) *Service {
-	return &Service{repository: repository}
+func New(repository MovieRepository, index SearchIndex) *Service {
+	return &Service{repository: repository, index: index}
 }
 
 func validateRange(from, to int64) error {

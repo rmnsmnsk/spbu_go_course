@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrNotFound        = errors.New("movie not found")
 	ErrInvalidRange    = errors.New("invalid movie range")
+	ErrInvalidQuery    = errors.New("search query is empty")
 	ErrNoMovies        = errors.New("no movies found")
 	ErrUpstreamTimeout = errors.New("movie stand request timed out")
 )
