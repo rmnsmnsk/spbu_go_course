@@ -63,9 +63,17 @@ func toMovieResponse(value domain.Movie) movieResponse {
 	}
 }
 
+func toMoviesResponse(movies []domain.Movie) []movieResponse {
+	response := make([]movieResponse, 0, len(movies))
+	for _, movie := range movies {
+		response = append(response, toMovieResponse(movie))
+	}
+	return response
+}
+
 func writeServiceError(w http.ResponseWriter, err error) {
 	switch {
-	case errors.Is(err, domain.ErrInvalidRange):
+	case errors.Is(err, domain.ErrInvalidRange), errors.Is(err, domain.ErrInvalidQuery):
 		writeError(w, http.StatusBadRequest, err.Error())
 	case errors.Is(err, domain.ErrNoMovies), errors.Is(err, domain.ErrNotFound):
 		writeError(w, http.StatusNotFound, "movie not found")

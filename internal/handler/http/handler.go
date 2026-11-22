@@ -17,6 +17,7 @@ func New(service usecase.MovieUseCase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /load-movies", h.loadMovies)
 	mux.HandleFunc("GET /last-movie", h.lastMovie)
+	mux.HandleFunc("GET /search", h.searchMovies)
 	mux.HandleFunc("GET /swagger/openapi.yaml", serveOpenAPI)
 	mux.Handle("/swagger/", httpSwagger.Handler(httpSwagger.URL("/swagger/openapi.yaml")))
 	return mux
@@ -55,4 +56,14 @@ func (h *Handler) lastMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, toMovieResponse(result))
+}
+
+func (h *Handler) searchMovies(w http.ResponseWriter, r *http.Request) {
+	movies, err := h.service.SearchMovies(r.Context(), r.URL.Query().Get("q"))
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toMoviesResponse(movies))
 }
