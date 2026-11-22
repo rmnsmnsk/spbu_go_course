@@ -85,8 +85,9 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("build movie search index: %w", err)
 	}
 	log.Print("movie search index completed")
+	cache := redisadapter.NewSearchCache(redisClient)
 
-	movieService := usecase.New(repository, index)
+	movieService := usecase.New(repository, index, cache)
 
 	grpcListener, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

@@ -22,6 +22,10 @@ func NewIndex(client *goredis.Client) *Index {
 }
 
 func (i *Index) Replace(ctx context.Context, entries map[string][]int64) error {
+	if err := clearSearchCache(ctx, i.client); err != nil {
+		return fmt.Errorf("clear search cache: %w", err)
+	}
+
 	oldKeys, err := i.client.SMembers(ctx, indexKeysKey).Result()
 	if err != nil {
 		return fmt.Errorf("get old index keys: %w", err)

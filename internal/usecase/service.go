@@ -17,6 +17,11 @@ type SearchIndex interface {
 	FindAny(ctx context.Context, words []string) ([]int64, error)
 }
 
+type SearchCache interface {
+	Get(ctx context.Context, query string) ([]domain.Movie, bool, error)
+	Set(ctx context.Context, query string, movies []domain.Movie) error
+}
+
 type MovieUseCase interface {
 	LoadMovies(ctx context.Context, from, to int64) (domain.LoadResult, error)
 	GetLastMovie(ctx context.Context) (domain.Movie, error)
@@ -26,10 +31,11 @@ type MovieUseCase interface {
 type Service struct {
 	repository MovieRepository
 	index      SearchIndex
+	cache      SearchCache
 }
 
-func New(repository MovieRepository, index SearchIndex) *Service {
-	return &Service{repository: repository, index: index}
+func New(repository MovieRepository, index SearchIndex, cache SearchCache) *Service {
+	return &Service{repository: repository, index: index, cache: cache}
 }
 
 func validateRange(from, to int64) error {
