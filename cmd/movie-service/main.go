@@ -78,6 +78,13 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("synchronize movies: %w", err)
 	}
 	log.Print("movie synchronization completed")
+	index := redisadapter.NewIndex(redisClient)
+	indexer := usecase.NewIndexer(repository, index)
+	log.Print("building movie search index")
+	if err := indexer.Rebuild(ctx); err != nil {
+		return fmt.Errorf("build movie search index: %w", err)
+	}
+	log.Print("movie search index completed")
 
 	movieService := usecase.New(repository)
 

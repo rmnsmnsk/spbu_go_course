@@ -55,6 +55,32 @@ func (r *Repository) GetMovie(ctx context.Context, id int64) (domain.Movie, erro
 	return movie, nil
 }
 
+func (r *Repository) GetAllMovies(ctx context.Context) ([]domain.Movie, error) {
+	const query = `
+		SELECT id, title, year, director
+		FROM movies
+		ORDER BY id`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("get all movies: %w", err)
+	}
+	defer rows.Close()
+
+	movies := make([]domain.Movie, 0)
+	for rows.Next() {
+		var movie domain.Movie
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.Year, &movie.Director); err != nil {
+			return nil, fmt.Errorf("scan movie: %w", err)
+		}
+		movies = append(movies, movie)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read movies: %w", err)
+	}
+	return movies, nil
+}
+
 func (r *Repository) GetMoviesRange(ctx context.Context, from, to int64) (domain.LoadResult, error) {
 	if from <= 0 || to <= 0 || from > to {
 		return domain.LoadResult{}, domain.ErrInvalidRange
