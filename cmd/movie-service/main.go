@@ -17,6 +17,7 @@ import (
 	moviev1 "movie-service/gen/movie/v1"
 	"movie-service/internal/adapter/moviestand"
 	"movie-service/internal/adapter/postgres"
+	redisadapter "movie-service/internal/adapter/redis"
 	grpchandler "movie-service/internal/handler/grpc"
 	httphandler "movie-service/internal/handler/http"
 	"movie-service/internal/usecase"
@@ -47,6 +48,10 @@ func run(ctx context.Context) error {
 	if databaseURL == "" {
 		return errors.New("DATABASE_URL is required")
 	}
+	redisAddress := os.Getenv("REDIS_ADDR")
+	if redisAddress == "" {
+		return errors.New("REDIS_ADDR is required")
+	}
 
 	db, err := postgres.Open(databaseURL)
 	if err != nil {
@@ -56,6 +61,11 @@ func run(ctx context.Context) error {
 	if err := postgres.Migrate(db); err != nil {
 		return fmt.Errorf("migrate PostgreSQL: %w", err)
 	}
+	redisClient, err := redisadapter.Open(ctx, redisAddress)
+	if err != nil {
+		return fmt.Errorf("connect to Redis: %w", err)
+	}
+	defer redisClient.Close()
 
 	repository := postgres.NewRepository(db)
 	stand := moviestand.New(baseURL, requestTimeout, workerCount)
